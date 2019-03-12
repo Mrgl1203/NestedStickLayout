@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+<declare-styleable name="NestedStickLayout">
+    <attr name="scrollType">
+        <enum name="scroll" value="1"/>
+        <enum name="noscroll" value="2"/>
+    </attr>
+</declare-styleable>
+</resources>
