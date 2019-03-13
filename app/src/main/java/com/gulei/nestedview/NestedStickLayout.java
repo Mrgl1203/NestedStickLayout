@@ -3,9 +3,7 @@ package com.gulei.nestedview;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.TypedArray;
-import android.graphics.Canvas;
 import android.support.annotation.Nullable;
-import android.support.v4.view.NestedScrollingChildHelper;
 import android.support.v4.view.NestedScrollingParent;
 import android.support.v4.view.NestedScrollingParentHelper;
 import android.support.v4.view.ViewCompat;
@@ -13,6 +11,8 @@ import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -20,18 +20,18 @@ import android.widget.OverScroller;
 
 /**
  * Created by gl152 on 2019/3/11.
- * https://blog.csdn.net/lmj623565791/article/details/52204039
  */
 
 public class NestedStickLayout extends LinearLayout implements NestedScrollingParent {
     private static final String TAG = "NestedStickLayout";
 
 
-    NestedScrollingChildHelper mNestedChildHelper;
+    //    NestedScrollingChildHelper mNestedChildHelper;
     NestedScrollingParentHelper mNestedParentHelper;
     int mTopViewHeight;
     OverScroller mScroller;
     private ValueAnimator mOffsetAnimator;
+    private GestureDetector mGestureDetector;
 
     public NestedStickLayout(Context context) {
         this(context, null);
@@ -43,10 +43,24 @@ public class NestedStickLayout extends LinearLayout implements NestedScrollingPa
 
     public NestedStickLayout(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        mNestedChildHelper = new NestedScrollingChildHelper(this);
+//        mNestedChildHelper = new NestedScrollingChildHelper(this);
         mNestedParentHelper = new NestedScrollingParentHelper(this);
         mScroller = new OverScroller(context);
         setOrientation(LinearLayout.VERTICAL);
+        mGestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
+
+            @Override
+            public boolean onScroll(MotionEvent e1, MotionEvent e2, float dx, float dy) {
+                boolean hiddenTop = dy > 0 && getScrollY() < mTopViewHeight;
+                boolean showTop = dy < 0 && getScrollY() > 0;
+                if (hiddenTop || showTop) {
+                    scrollBy(0, (int) dy);
+                    Log.i(TAG, "onNestedPreScroll: " + (hiddenTop) + "   " + (showTop) + "   " + "scrollBy：" + dy + "getScrollY:" + getScrollY());
+                }
+                return hiddenTop || showTop;
+            }
+
+        });
     }
 
     @Override
@@ -70,17 +84,17 @@ public class NestedStickLayout extends LinearLayout implements NestedScrollingPa
 
     }
 
-    @Override
-    protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        Log.i(TAG, "onLayout: -------------------------");
-        super.onLayout(changed, l, t, r, b);
-    }
-
-    @Override
-    protected boolean drawChild(Canvas canvas, View child, long drawingTime) {
-        Log.i(TAG, "drawChild: -------------------------");
-        return super.drawChild(canvas, child, drawingTime);
-    }
+//    @Override
+//    protected void onLayout(boolean changed, int l, int t, int r, int b) {
+//        Log.i(TAG, "onLayout: -------------------------");
+//        super.onLayout(changed, l, t, r, b);
+//    }
+//
+//    @Override
+//    protected boolean drawChild(Canvas canvas, View child, long drawingTime) {
+//        Log.i(TAG, "drawChild: -------------------------");
+//        return super.drawChild(canvas, child, drawingTime);
+//    }
 
     /**
      * NestedScrollingChild调用startNestedScroll向parent传递滑动信息，parent可以通过onStartNestedScroll判断是否拦截处理
@@ -297,6 +311,11 @@ public class NestedStickLayout extends LinearLayout implements NestedScrollingPa
         mNestedParentHelper.onStopNestedScroll(child);
     }
 
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        mGestureDetector.onTouchEvent(event);
+        return true;
+    }
 
     public int dp2px(float dp) {
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, getResources().getDisplayMetrics());

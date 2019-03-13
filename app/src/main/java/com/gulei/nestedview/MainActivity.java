@@ -2,6 +2,10 @@ package com.gulei.nestedview;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.design.widget.TabLayout;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -14,21 +18,62 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-    RecyclerView recyclerView;
     List<String> data = new ArrayList<>();
+    List<RecyclerView> recyclerViews = new ArrayList<>();
+    String[] tabs = new String[]{"推荐", "车展", "新闻"};
+    ViewPager viewPager;
+    TabLayout tabLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        viewPager = findViewById(R.id.viewPager);
+        tabLayout = findViewById(R.id.tablayout);
         for (int i = 0; i < 50; i++) {
             data.add("数据" + i);
         }
-        recyclerView = findViewById(R.id.recyclerView);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
-        RvAdapter rvAdapter = new RvAdapter();
-        rvAdapter.addData(data);
-        recyclerView.setAdapter(rvAdapter);
+        for (int i = 0; i < tabs.length; i++) {
+            tabLayout.addTab(tabLayout.newTab().setText(tabs[i]));
+            RecyclerView recyclerView = new RecyclerView(this);
+            recyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+            RvAdapter rvAdapter = new RvAdapter();
+            rvAdapter.addData(data);
+            recyclerView.setAdapter(rvAdapter);
+            recyclerViews.add(recyclerView);
+        }
+
+        tabLayout.setupWithViewPager(viewPager);
+        viewPager.setAdapter(new PagerAdapter() {
+            @Override
+            public int getCount() {
+                return tabs.length;
+            }
+
+            @Override
+            public boolean isViewFromObject(@NonNull View view, @NonNull Object object) {
+                return view == object;
+            }
+
+            @NonNull
+            @Override
+            public Object instantiateItem(@NonNull ViewGroup container, int position) {
+                container.addView(recyclerViews.get(position));
+                return recyclerViews.get(position);
+            }
+
+            @Override
+            public void destroyItem(@NonNull ViewGroup container, int position, @NonNull Object object) {
+                container.removeView(recyclerViews.get(position));
+            }
+
+            @Nullable
+            @Override
+            public CharSequence getPageTitle(int position) {
+                return tabs[position];
+            }
+        });
+
     }
 
 
